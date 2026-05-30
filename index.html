@@ -5,42 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Retirement Calculator</title>
   <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f0f4f8;color:#1a202c;min-height:100vh;padding:2rem 1rem}
-    h1{text-align:center;font-size:1.8rem;font-weight:700;margin-bottom:.25rem;color:#2d3748}
-    .subtitle{text-align:center;color:#718096;font-size:.95rem;margin-bottom:2rem}
-    .card{background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,.08);max-width:760px;margin:0 auto 1.5rem}
-    .card h2{font-size:1rem;font-weight:600;color:#4a5568;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1.2rem;border-bottom:2px solid #e2e8f0;padding-bottom:.5rem}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-    @media(max-width:520px){.grid{grid-template-columns:1fr}}
-    .field label{display:block;font-size:.85rem;font-weight:500;color:#4a5568;margin-bottom:.35rem}
-    .field input{width:100%;padding:.55rem .75rem;border:1.5px solid #cbd5e0;border-radius:8px;font-size:1rem;color:#2d3748;transition:border-color .15s;outline:none}
-    .field input:focus{border-color:#4299e1}
-    .hint{font-size:.75rem;color:#a0aec0;margin-top:.25rem}
-    .adv-btn{font-size:.82rem;color:#4299e1;cursor:pointer;display:inline-flex;align-items:center;gap:.25rem;margin-top:.75rem;user-select:none;background:none;border:none}
-    #adv{display:none;margin-top:1rem}
-    #adv.open{display:block}
-    .calc-btn{display:block;width:100%;padding:.75rem;background:#3182ce;color:#fff;font-size:1rem;font-weight:600;border:none;border-radius:10px;cursor:pointer;margin-top:1.25rem}
-    .calc-btn:hover{background:#2b6cb0}
-    #results{display:none}
-    .result-section{max-width:760px;margin:0 auto 1.5rem}
-    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-    .stat{background:#f7fafc;border-radius:10px;padding:1rem 1.2rem;border:1.5px solid #e2e8f0}
-    .stat .lbl{font-size:.8rem;color:#718096;font-weight:500;margin-bottom:.25rem}
-    .stat .val{font-size:1.4rem;font-weight:700;color:#2b6cb0}
-    .stat .val.green{color:#276749}
-    .tag{display:inline-block;font-size:.7rem;font-weight:600;padding:.15rem .5rem;border-radius:999px;margin-left:.4rem;vertical-align:middle}
-    .tag.blue{background:#bee3f8;color:#2b6cb0}
-    .tag.green{background:#c6f6d5;color:#276749}
-    .sec-intro{font-size:.88rem;color:#718096;margin-bottom:1rem}
-    .divider{height:1px;background:#e2e8f0;margin:1rem 0}
-    .mb-h{font-size:.9rem;font-weight:600;color:#4a5568;margin-bottom:.75rem}
-    table{width:100%;border-collapse:collapse;font-size:.9rem}
-    td{padding:.5rem .6rem;border-bottom:1px solid #f0f0f0}
-    td:first-child{color:#718096}
-    td:last-child{font-weight:600;color:#2d3748;text-align:right}
-    .note{font-size:.78rem;color:#a0aec0;line-height:1.6}
-    .err{color:#e53e3e;font-size:.85rem;margin-top:.5rem;display:none}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f4f8; color: #1a202c; min-height: 100vh; padding: 2rem 1rem; }
+    h1 { text-align: center; font-size: 1.8rem; font-weight: 700; margin-bottom: .25rem; color: #2d3748; }
+    .subtitle { text-align: center; color: #718096; font-size: .95rem; margin-bottom: 2rem; }
+    .card { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.08); max-width: 760px; margin: 0 auto 1.5rem; }
+    .card h2 { font-size: 1rem; font-weight: 600; color: #4a5568; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 1.2rem; border-bottom: 2px solid #e2e8f0; padding-bottom: .5rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+    .field label { display: block; font-size: .85rem; font-weight: 500; color: #4a5568; margin-bottom: .35rem; }
+    .field input { width: 100%; padding: .55rem .75rem; border: 1.5px solid #cbd5e0; border-radius: 8px; font-size: 1rem; color: #2d3748; transition: border-color .15s; outline: none; }
+    .field input:focus { border-color: #4299e1; }
+    .field .hint { font-size: .75rem; color: #a0aec0; margin-top: .25rem; }
+    button.calc-btn { display: block; width: 100%; padding: .75rem; background: #3182ce; color: #fff; font-size: 1rem; font-weight: 600; border: none; border-radius: 10px; cursor: pointer; transition: background .15s; margin-top: 1.25rem; }
+    button.calc-btn:hover { background: #2b6cb0; }
+    #results { display: none; }
+    .result-section { max-width: 760px; margin: 0 auto 1.5rem; }
+    .result-section .card h2 { color: #2d3748; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 520px) { .stat-grid { grid-template-columns: 1fr; } }
+    .stat { background: #f7fafc; border-radius: 10px; padding: 1rem 1.2rem; border: 1.5px solid #e2e8f0; }
+    .stat .label { font-size: .8rem; color: #718096; font-weight: 500; margin-bottom: .25rem; }
+    .stat .value { font-size: 1.4rem; font-weight: 700; color: #2b6cb0; }
+    .stat .value.green { color: #276749; }
+    .tag { display: inline-block; font-size: .7rem; font-weight: 600; padding: .15rem .5rem; border-radius: 999px; margin-left: .4rem; vertical-align: middle; }
+    .tag.blue { background: #bee3f8; color: #2b6cb0; }
+    .tag.green { background: #c6f6d5; color: #276749; }
+    .section-intro { font-size: .88rem; color: #718096; margin-bottom: 1rem; }
+    .divider { height: 1px; background: #e2e8f0; margin: 1rem 0; }
+    .method-block h3 { font-size: .9rem; font-weight: 600; color: #4a5568; margin-bottom: .75rem; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    td { padding: .5rem .6rem; border-bottom: 1px solid #f0f0f0; }
+    td:first-child { color: #718096; }
+    td:last-child { font-weight: 600; color: #2d3748; text-align: right; }
+    .assumptions { font-size: .78rem; color: #a0aec0; margin-top: 1rem; line-height: 1.6; }
+    .error { color: #e53e3e; font-size: .85rem; margin-top: .5rem; display: none; }
   </style>
 </head>
 <body>
@@ -49,89 +48,81 @@
 <div class="card">
   <h2>Your Details</h2>
   <div class="grid">
-    <div class="field"><label>Current Age</label><input type="number" id="ca" placeholder="e.g. 30" min="18" max="80"/></div>
-    <div class="field"><label>Desired Retirement Age</label><input type="number" id="ra" placeholder="e.g. 65" min="30" max="85"/></div>
-    <div class="field"><label>Desired Monthly Income in Retirement</label><input type="number" id="mi" placeholder="e.g. 5000" min="1"/><div class="hint">In today's dollars</div></div>
+    <div class="field"><label for="currentAge">Current Age</label><input type="number" id="currentAge" placeholder="e.g. 30" min="18" max="80" /></div>
+    <div class="field"><label for="retirementAge">Desired Retirement Age</label><input type="number" id="retirementAge" placeholder="e.g. 65" min="30" max="85" /></div>
+    <div class="field"><label for="monthlyIncome">Desired Monthly Income in Retirement</label><input type="number" id="monthlyIncome" placeholder="e.g. 5000" min="1" /><div class="hint">In today's dollars</div></div>
+    <div class="field"><label for="lifespan">Expected Lifespan</label><input type="number" id="lifespan" value="85" min="60" max="110" /><div class="hint">Years (default: 85)</div></div>
   </div>
-  <button class="adv-btn" onclick="document.getElementById('adv').classList.toggle('open')">+ Advanced assumptions</button>
-  <div id="adv">
-    <div class="grid">
-      <div class="field"><label>Portfolio Return During Retirement (%)</label><input type="number" id="dr" value="4" min="0" max="15" step="0.1"/><div class="hint">Annual % for drawdown calc (default 4%)</div></div>
-      <div class="field"><label>Expected Lifespan</label><input type="number" id="ls" value="85" min="60" max="110"/><div class="hint">Default: 85 years</div></div>
-    </div>
-  </div>
-  <div class="err" id="err"></div>
-  <button class="calc-btn" onclick="calc()">Calculate My Retirement Plan</button>
+  <div class="error" id="errorMsg"></div>
+  <button class="calc-btn" onclick="calculate()">Calculate My Retirement Plan</button>
 </div>
 <div id="results">
   <div class="result-section"><div class="card">
     <h2>Retirement Sum Required</h2>
     <div class="stat-grid">
-      <div class="stat"><div class="lbl">Drawdown Method <span class="tag blue">Drawdown</span></div><div class="val" id="rds">-</div><div id="rdh" style="margin-top:.4rem;font-size:.78rem;color:#a0aec0"></div></div>
-      <div class="stat"><div class="lbl">Dividend Method <span class="tag green">6% Yield</span></div><div class="val green" id="rvs">-</div><div style="margin-top:.4rem;font-size:.78rem;color:#a0aec0">6% annual yield; capital preserved</div></div>
+      <div class="stat"><div class="label">Drawdown Method <span class="tag blue">Drawdown</span></div><div class="value" id="r-drawdown-sum">-</div><div class="hint" id="r-drawdown-hint" style="margin-top:.4rem;font-size:.78rem;color:#a0aec0"></div></div>
+      <div class="stat"><div class="label">Dividend Method <span class="tag green">6% Yield</span></div><div class="value green" id="r-dividend-sum">-</div><div class="hint" style="margin-top:.4rem;font-size:.78rem;color:#a0aec0">6% annual dividend; capital preserved</div></div>
     </div>
   </div></div>
   <div class="result-section"><div class="card">
-    <h2>How to Achieve — Drawdown Method</h2>
-    <p class="sec-intro" id="ddl"></p>
-    <p class="mb-h">Save Only (no investment returns)</p>
-    <table><tr><td>Monthly savings needed</td><td id="dds">-</td></tr><tr><td>Years until retirement</td><td id="ddy">-</td></tr><tr><td>Total saved</td><td id="ddt">-</td></tr></table>
+    <h2>How to Achieve - Drawdown Method</h2>
+    <p class="section-intro" id="r-drawdown-target-label"></p>
+    <div class="method-block"><h3>Save Only (no investment returns)</h3>
+    <table><tr><td>Monthly savings needed</td><td id="r-dd-save">-</td></tr><tr><td>Years until retirement</td><td id="r-dd-years">-</td></tr><tr><td>Total saved</td><td id="r-dd-total">-</td></tr></table></div>
     <div class="divider"></div>
-    <p class="mb-h">Invest Monthly (8% p.a. return)</p>
-    <table><tr><td>Monthly investment needed</td><td id="ddi">-</td></tr><tr><td>Total contributions</td><td id="ddit">-</td></tr><tr><td>Portfolio value at retirement</td><td id="ddiv">-</td></tr></table>
+    <div class="method-block"><h3>Invest Monthly (8% p.a. return)</h3>
+    <table><tr><td>Monthly investment needed</td><td id="r-dd-invest">-</td></tr><tr><td>Total invested</td><td id="r-dd-invest-total">-</td></tr><tr><td>Portfolio value at retirement</td><td id="r-dd-invest-fv">-</td></tr></table></div>
   </div></div>
   <div class="result-section"><div class="card">
-    <h2>How to Achieve — Dividend Method</h2>
-    <p class="sec-intro" id="dvl"></p>
-    <p class="mb-h">Save Only (no investment returns)</p>
-    <table><tr><td>Monthly savings needed</td><td id="dvs">-</td></tr><tr><td>Years until retirement</td><td id="dvy">-</td></tr><tr><td>Total saved</td><td id="dvt">-</td></tr></table>
+    <h2>How to Achieve - Dividend Method</h2>
+    <p class="section-intro" id="r-dividend-target-label"></p>
+    <div class="method-block"><h3>Save Only (no investment returns)</h3>
+    <table><tr><td>Monthly savings needed</td><td id="r-dv-save">-</td></tr><tr><td>Years until retirement</td><td id="r-dv-years">-</td></tr><tr><td>Total saved</td><td id="r-dv-total">-</td></tr></table></div>
     <div class="divider"></div>
-    <p class="mb-h">Invest Monthly (8% p.a. return)</p>
-    <table><tr><td>Monthly investment needed</td><td id="dvi">-</td></tr><tr><td>Total contributions</td><td id="dvit">-</td></tr><tr><td>Portfolio value at retirement</td><td id="dviv">-</td></tr></table>
+    <div class="method-block"><h3>Invest Monthly (8% p.a. return)</h3>
+    <table><tr><td>Monthly investment needed</td><td id="r-dv-invest">-</td></tr><tr><td>Total invested</td><td id="r-dv-invest-total">-</td></tr><tr><td>Portfolio value at retirement</td><td id="r-dv-invest-fv">-</td></tr></table></div>
   </div></div>
-  <p class="note" style="max-width:760px;margin:0 auto 2rem"><strong>Assumptions:</strong> Drawdown uses <span id="adr"></span>% p.a. portfolio return in retirement, depleting capital by age <span id="als"></span>. Dividend assumes 6% annual yield, capital preserved indefinitely. Accumulation assumes 8% p.a. compound return. All figures nominal (not inflation-adjusted).</p>
+  <p class="assumptions" style="max-width:760px;margin:0 auto 2rem;"><strong>Assumptions:</strong> Drawdown assumes no investment returns in retirement — capital is spent to zero by age <span id="a-lifespan"></span>. Dividend assumes 6% annual yield, capital preserved indefinitely. Accumulation assumes 8% p.a. compound return. All figures nominal (not inflation-adjusted).</p>
 </div>
 <script>
-function fmt(n){return'$'+Math.round(n).toLocaleString('en-US');}
-function calc(){
-  var e=document.getElementById('err');e.style.display='none';
-  var ca=+document.getElementById('ca').value,
-      ra=+document.getElementById('ra').value,
-      mi=+document.getElementById('mi').value,
-      dr=+document.getElementById('dr').value/100,
-      ls=+document.getElementById('ls').value;
-  if(!ca||!ra||!mi){e.textContent='Please fill in all required fields.';e.style.display='block';return;}
-  if(ca>=ra){e.textContent='Retirement age must be greater than current age.';e.style.display='block';return;}
-  if(ra>=ls){e.textContent='Retirement age must be less than lifespan ('+ls+').';e.style.display='block';return;}
-  var ytr=ra-ca,mtr=ytr*12,rm=(ls-ra)*12,rmd=dr/12;
-  var ds=rmd===0?mi*rm:mi*(1-Math.pow(1+rmd,-rm))/rmd;
-  var dvs=mi*12/0.06;
-  var ir=0.08/12;
-  function ms(t){return t/mtr;}
-  function minv(t){return mtr===0?t:t*ir/(Math.pow(1+ir,mtr)-1);}
-  var A=ms(ds),B=minv(ds),C=ms(dvs),D=minv(dvs);
-  document.getElementById('rds').textContent=fmt(ds);
-  document.getElementById('rdh').textContent='Funds '+mi.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})+'/mo for '+(ls-ra)+' yrs';
-  document.getElementById('rvs').textContent=fmt(dvs);
-  document.getElementById('ddl').textContent='Target: '+fmt(ds)+' — sustains '+fmt(mi)+'/mo for '+(ls-ra)+' years.';
-  document.getElementById('dds').textContent=fmt(A)+' / mo';
-  document.getElementById('ddy').textContent=ytr+' years';
-  document.getElementById('ddt').textContent=fmt(A*mtr);
-  document.getElementById('ddi').textContent=fmt(B)+' / mo';
-  document.getElementById('ddit').textContent=fmt(B*mtr);
-  document.getElementById('ddiv').textContent=fmt(ds);
-  document.getElementById('dvl').textContent='Target: '+fmt(dvs)+' — generates '+fmt(mi)+'/mo indefinitely via 6% yield.';
-  document.getElementById('dvs').textContent=fmt(C)+' / mo';
-  document.getElementById('dvy').textContent=ytr+' years';
-  document.getElementById('dvt').textContent=fmt(C*mtr);
-  document.getElementById('dvi').textContent=fmt(D)+' / mo';
-  document.getElementById('dvit').textContent=fmt(D*mtr);
-  document.getElementById('dviv').textContent=fmt(dvs);
-  document.getElementById('adr').textContent=(dr*100).toFixed(1);
-  document.getElementById('als').textContent=ls;
-  document.getElementById('results').style.display='block';
-  document.getElementById('results').scrollIntoView({behavior:'smooth'});
-}
+  function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+  function calculate() {
+    var err = document.getElementById('errorMsg'); err.style.display = 'none';
+    var ca = parseFloat(document.getElementById('currentAge').value),
+        ra = parseFloat(document.getElementById('retirementAge').value),
+        mi = parseFloat(document.getElementById('monthlyIncome').value),
+        ls = parseFloat(document.getElementById('lifespan').value);
+    if (!ca || !ra || !mi) { err.textContent = 'Please fill in all required fields.'; err.style.display = 'block'; return; }
+    if (ca >= ra) { err.textContent = 'Retirement age must be greater than current age.'; err.style.display = 'block'; return; }
+    if (ra >= ls) { err.textContent = 'Retirement age must be less than expected lifespan (' + ls + ').'; err.style.display = 'block'; return; }
+    var ytr = ra - ca, mtr = ytr * 12, rm = (ls - ra) * 12;
+    var ds = mi * rm;
+    var dvs = mi * 12 / 0.06;
+    var ir = 0.08 / 12;
+    function ms(t) { return t / mtr; }
+    function minv(t) { return mtr === 0 ? t : t * ir / (Math.pow(1 + ir, mtr) - 1); }
+    var ddSave = ms(ds), ddInvest = minv(ds), dvSave = ms(dvs), dvInvest = minv(dvs);
+    document.getElementById('r-drawdown-sum').textContent = fmt(ds);
+    document.getElementById('r-drawdown-hint').textContent = 'Funds ' + mi.toLocaleString('en-US', {style:'currency',currency:'USD',maximumFractionDigits:0}) + '/mo over ' + (ls - ra) + ' years';
+    document.getElementById('r-dividend-sum').textContent = fmt(dvs);
+    document.getElementById('r-drawdown-target-label').textContent = 'Target: ' + fmt(ds) + ' — funds ' + fmt(mi) + '/month for ' + (ls - ra) + ' years.';
+    document.getElementById('r-dd-save').textContent = fmt(ddSave) + ' / mo';
+    document.getElementById('r-dd-years').textContent = ytr + ' years';
+    document.getElementById('r-dd-total').textContent = fmt(ddSave * mtr);
+    document.getElementById('r-dd-invest').textContent = fmt(ddInvest) + ' / mo';
+    document.getElementById('r-dd-invest-total').textContent = fmt(ddInvest * mtr);
+    document.getElementById('r-dd-invest-fv').textContent = fmt(ds);
+    document.getElementById('r-dividend-target-label').textContent = 'Target: ' + fmt(dvs) + ' — generates ' + fmt(mi) + '/month indefinitely via 6% yield.';
+    document.getElementById('r-dv-save').textContent = fmt(dvSave) + ' / mo';
+    document.getElementById('r-dv-years').textContent = ytr + ' years';
+    document.getElementById('r-dv-total').textContent = fmt(dvSave * mtr);
+    document.getElementById('r-dv-invest').textContent = fmt(dvInvest) + ' / mo';
+    document.getElementById('r-dv-invest-total').textContent = fmt(dvInvest * mtr);
+    document.getElementById('r-dv-invest-fv').textContent = fmt(dvs);
+    document.getElementById('a-lifespan').textContent = ls;
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+  }
 </script>
 </body>
 </html>
