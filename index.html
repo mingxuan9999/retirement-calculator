@@ -227,11 +227,13 @@
     var ds = mi * rm;
     var dvs = mi * 12 / 0.06;
     var ir = 0.08 / 12;
+    var ddShortfall = Math.max(0, ds - cs);
+    var dvShortfall = Math.max(0, dvs - cs);
 
-    function ms(t) { return t / mtr; }
+    function ms(t) { return mtr === 0 ? 0 : t / mtr; }
     function minv(t) { return mtr === 0 ? t : t * ir / (Math.pow(1 + ir, mtr) - 1); }
 
-    var ddSave = ms(ds), ddInvest = minv(ds), dvSave = ms(dvs), dvInvest = minv(dvs);
+    var ddSave = ms(ddShortfall), ddInvest = minv(ddShortfall), dvSave = ms(dvShortfall), dvInvest = minv(dvShortfall);
 
     // ââ Text outputs âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     document.getElementById('r-drawdown-sum').textContent = fmt(ds);
