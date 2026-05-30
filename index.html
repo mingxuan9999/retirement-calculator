@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Retirement Calculator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f4f8; color: #1a202c; min-height: 100vh; padding: 2rem 1rem; }
@@ -21,7 +22,6 @@
     button.calc-btn:hover { background: #2b6cb0; }
     #results { display: none; }
     .result-section { max-width: 760px; margin: 0 auto 1.5rem; }
-    .result-section .card h2 { color: #2d3748; }
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     @media (max-width: 520px) { .stat-grid { grid-template-columns: 1fr; } }
     .stat { background: #f7fafc; border-radius: 10px; padding: 1rem 1.2rem; border: 1.5px solid #e2e8f0; }
@@ -38,91 +38,385 @@
     td { padding: .5rem .6rem; border-bottom: 1px solid #f0f0f0; }
     td:first-child { color: #718096; }
     td:last-child { font-weight: 600; color: #2d3748; text-align: right; }
-    .assumptions { font-size: .78rem; color: #a0aec0; margin-top: 1rem; line-height: 1.6; }
+    .chart-card { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.08); max-width: 760px; margin: 0 auto 1.5rem; }
+    .chart-card h2 { font-size: 1rem; font-weight: 600; color: #4a5568; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: .5rem; }
+    .chart-card .chart-desc { font-size: .82rem; color: #a0aec0; margin-bottom: 1rem; }
+    .chart-wrap { position: relative; height: 280px; }
+    .assumptions { font-size: .78rem; color: #a0aec0; line-height: 1.6; }
     .error { color: #e53e3e; font-size: .85rem; margin-top: .5rem; display: none; }
   </style>
 </head>
 <body>
+
 <h1>Retirement Calculator</h1>
 <p class="subtitle">Plan your path to financial freedom</p>
+
+<!-- Input Card -->
 <div class="card">
   <h2>Your Details</h2>
   <div class="grid">
-    <div class="field"><label for="currentAge">Current Age</label><input type="number" id="currentAge" placeholder="e.g. 30" min="18" max="80" /></div>
-    <div class="field"><label for="retirementAge">Desired Retirement Age</label><input type="number" id="retirementAge" placeholder="e.g. 65" min="30" max="85" /></div>
-    <div class="field"><label for="monthlyIncome">Desired Monthly Income in Retirement</label><input type="number" id="monthlyIncome" placeholder="e.g. 5000" min="1" /><div class="hint">In today's dollars</div></div>
-    <div class="field"><label for="lifespan">Expected Lifespan</label><input type="number" id="lifespan" value="85" min="60" max="110" /><div class="hint">Years (default: 85)</div></div>
+    <div class="field">
+      <label for="currentAge">Current Age</label>
+      <input type="number" id="currentAge" placeholder="e.g. 30" min="18" max="80" />
+    </div>
+    <div class="field">
+      <label for="retirementAge">Desired Retirement Age</label>
+      <input type="number" id="retirementAge" placeholder="e.g. 65" min="30" max="85" />
+    </div>
+    <div class="field">
+      <label for="monthlyIncome">Desired Monthly Income in Retirement</label>
+      <input type="number" id="monthlyIncome" placeholder="e.g. 5000" min="1" />
+      <div class="hint">In today's dollars</div>
+    </div>
+    <div class="field">
+      <label for="lifespan">Expected Lifespan</label>
+      <input type="number" id="lifespan" value="85" min="60" max="110" />
+      <div class="hint">Years (default: 85)</div>
+    </div>
   </div>
   <div class="error" id="errorMsg"></div>
   <button class="calc-btn" onclick="calculate()">Calculate My Retirement Plan</button>
 </div>
+
+<!-- Results -->
 <div id="results">
-  <div class="result-section"><div class="card">
-    <h2>Retirement Sum Required</h2>
-    <div class="stat-grid">
-      <div class="stat"><div class="label">Drawdown Method <span class="tag blue">Drawdown</span></div><div class="value" id="r-drawdown-sum">-</div><div class="hint" id="r-drawdown-hint" style="margin-top:.4rem;font-size:.78rem;color:#a0aec0"></div></div>
-      <div class="stat"><div class="label">Dividend Method <span class="tag green">6% Yield</span></div><div class="value green" id="r-dividend-sum">-</div><div class="hint" style="margin-top:.4rem;font-size:.78rem;color:#a0aec0">6% annual dividend; capital preserved</div></div>
+
+  <!-- Section 1: Retirement Sums -->
+  <div class="result-section">
+    <div class="card">
+      <h2>Retirement Sum Required</h2>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="label">Drawdown Method <span class="tag blue">Drawdown</span></div>
+          <div class="value" id="r-drawdown-sum">â</div>
+          <div class="hint" id="r-drawdown-hint" style="margin-top:.4rem;font-size:.78rem;color:#a0aec0"></div>
+        </div>
+        <div class="stat">
+          <div class="label">Dividend Method <span class="tag green">6% Yield</span></div>
+          <div class="value green" id="r-dividend-sum">â</div>
+          <div class="hint" style="margin-top:.4rem;font-size:.78rem;color:#a0aec0">6% annual dividend; capital preserved</div>
+        </div>
+      </div>
     </div>
-  </div></div>
-  <div class="result-section"><div class="card">
-    <h2>How to Achieve - Drawdown Method</h2>
-    <p class="section-intro" id="r-drawdown-target-label"></p>
-    <div class="method-block"><h3>Save Only (no investment returns)</h3>
-    <table><tr><td>Monthly savings needed</td><td id="r-dd-save">-</td></tr><tr><td>Years until retirement</td><td id="r-dd-years">-</td></tr><tr><td>Total saved</td><td id="r-dd-total">-</td></tr></table></div>
-    <div class="divider"></div>
-    <div class="method-block"><h3>Invest Monthly (8% p.a. return)</h3>
-    <table><tr><td>Monthly investment needed</td><td id="r-dd-invest">-</td></tr><tr><td>Total invested</td><td id="r-dd-invest-total">-</td></tr><tr><td>Portfolio value at retirement</td><td id="r-dd-invest-fv">-</td></tr></table></div>
-  </div></div>
-  <div class="result-section"><div class="card">
-    <h2>How to Achieve - Dividend Method</h2>
-    <p class="section-intro" id="r-dividend-target-label"></p>
-    <div class="method-block"><h3>Save Only (no investment returns)</h3>
-    <table><tr><td>Monthly savings needed</td><td id="r-dv-save">-</td></tr><tr><td>Years until retirement</td><td id="r-dv-years">-</td></tr><tr><td>Total saved</td><td id="r-dv-total">-</td></tr></table></div>
-    <div class="divider"></div>
-    <div class="method-block"><h3>Invest Monthly (8% p.a. return)</h3>
-    <table><tr><td>Monthly investment needed</td><td id="r-dv-invest">-</td></tr><tr><td>Total invested</td><td id="r-dv-invest-total">-</td></tr><tr><td>Portfolio value at retirement</td><td id="r-dv-invest-fv">-</td></tr></table></div>
-  </div></div>
-  <p class="assumptions" style="max-width:760px;margin:0 auto 2rem;"><strong>Assumptions:</strong> Drawdown assumes no investment returns in retirement — capital is spent to zero by age <span id="a-lifespan"></span>. Dividend assumes 6% annual yield, capital preserved indefinitely. Accumulation assumes 8% p.a. compound return. All figures nominal (not inflation-adjusted).</p>
+  </div>
+
+  <!-- Chart 1: Monthly amounts needed -->
+  <div class="chart-card">
+    <h2>How Much to Set Aside Each Month</h2>
+    <p class="chart-desc">Comparison of monthly savings or investment needed to hit each retirement target.</p>
+    <div class="chart-wrap">
+      <canvas id="chartMonthly"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 2: Retirement fund over time -->
+  <div class="chart-card">
+    <h2>Your Retirement Fund Over Time</h2>
+    <p class="chart-desc">How your pot behaves once you retire â drawdown shrinks to zero, dividends keep capital intact.</p>
+    <div class="chart-wrap">
+      <canvas id="chartRetirement"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 3: Accumulation phase -->
+  <div class="chart-card">
+    <h2>Building Your Retirement Fund</h2>
+    <p class="chart-desc">How your money grows from today to retirement â saving linearly vs investing with compound returns.</p>
+    <div class="chart-wrap">
+      <canvas id="chartAccumulation"></canvas>
+    </div>
+  </div>
+
+  <!-- Section 2: How to Achieve â Drawdown -->
+  <div class="result-section">
+    <div class="card">
+      <h2>How to Achieve â Drawdown Method</h2>
+      <p class="section-intro" id="r-drawdown-target-label"></p>
+      <div class="method-block">
+        <h3>ð° Save Only (no investment returns)</h3>
+        <table>
+          <tr><td>Monthly savings needed</td><td id="r-dd-save">â</td></tr>
+          <tr><td>Years until retirement</td><td id="r-dd-years">â</td></tr>
+          <tr><td>Total saved</td><td id="r-dd-total">â</td></tr>
+        </table>
+      </div>
+      <div class="divider"></div>
+      <div class="method-block">
+        <h3>ð Invest Monthly (8% p.a. return)</h3>
+        <table>
+          <tr><td>Monthly investment needed</td><td id="r-dd-invest">â</td></tr>
+          <tr><td>Total invested</td><td id="r-dd-invest-total">â</td></tr>
+          <tr><td>Portfolio value at retirement</td><td id="r-dd-invest-fv">â</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: How to Achieve â Dividend -->
+  <div class="result-section">
+    <div class="card">
+      <h2>How to Achieve â Dividend Method</h2>
+      <p class="section-intro" id="r-dividend-target-label"></p>
+      <div class="method-block">
+        <h3>ð° Save Only (no investment returns)</h3>
+        <table>
+          <tr><td>Monthly savings needed</td><td id="r-dv-save">â</td></tr>
+          <tr><td>Years until retirement</td><td id="r-dv-years">â</td></tr>
+          <tr><td>Total saved</td><td id="r-dv-total">â</td></tr>
+        </table>
+      </div>
+      <div class="divider"></div>
+      <div class="method-block">
+        <h3>ð Invest Monthly (8% p.a. return)</h3>
+        <table>
+          <tr><td>Monthly investment needed</td><td id="r-dv-invest">â</td></tr>
+          <tr><td>Total invested</td><td id="r-dv-invest-total">â</td></tr>
+          <tr><td>Portfolio value at retirement</td><td id="r-dv-invest-fv">â</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <p class="assumptions" style="max-width:760px;margin:0 auto 2rem;">
+    <strong>Assumptions:</strong>
+    Drawdown assumes no investment returns in retirement â capital is spent to zero by age <span id="a-lifespan"></span>.
+    Dividend assumes 6% annual yield, capital preserved indefinitely.
+    Accumulation assumes 8% p.a. compound return.
+    All figures nominal (not inflation-adjusted).
+  </p>
+
 </div>
+
 <script>
+  let chartMonthly = null, chartRetirement = null, chartAccumulation = null;
+
   function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+  function fmtK(n) {
+    if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return '$' + (n / 1e3).toFixed(0) + 'K';
+    return '$' + Math.round(n);
+  }
+
   function calculate() {
-    var err = document.getElementById('errorMsg'); err.style.display = 'none';
+    var err = document.getElementById('errorMsg');
+    err.style.display = 'none';
+
     var ca = parseFloat(document.getElementById('currentAge').value),
         ra = parseFloat(document.getElementById('retirementAge').value),
         mi = parseFloat(document.getElementById('monthlyIncome').value),
         ls = parseFloat(document.getElementById('lifespan').value);
+
     if (!ca || !ra || !mi) { err.textContent = 'Please fill in all required fields.'; err.style.display = 'block'; return; }
     if (ca >= ra) { err.textContent = 'Retirement age must be greater than current age.'; err.style.display = 'block'; return; }
     if (ra >= ls) { err.textContent = 'Retirement age must be less than expected lifespan (' + ls + ').'; err.style.display = 'block'; return; }
+
     var ytr = ra - ca, mtr = ytr * 12, rm = (ls - ra) * 12;
     var ds = mi * rm;
     var dvs = mi * 12 / 0.06;
     var ir = 0.08 / 12;
+
     function ms(t) { return t / mtr; }
     function minv(t) { return mtr === 0 ? t : t * ir / (Math.pow(1 + ir, mtr) - 1); }
+
     var ddSave = ms(ds), ddInvest = minv(ds), dvSave = ms(dvs), dvInvest = minv(dvs);
+
+    // ââ Text outputs âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     document.getElementById('r-drawdown-sum').textContent = fmt(ds);
     document.getElementById('r-drawdown-hint').textContent = 'Funds ' + mi.toLocaleString('en-US', {style:'currency',currency:'USD',maximumFractionDigits:0}) + '/mo over ' + (ls - ra) + ' years';
     document.getElementById('r-dividend-sum').textContent = fmt(dvs);
-    document.getElementById('r-drawdown-target-label').textContent = 'Target: ' + fmt(ds) + ' — funds ' + fmt(mi) + '/month for ' + (ls - ra) + ' years.';
+
+    document.getElementById('r-drawdown-target-label').textContent = 'Target: ' + fmt(ds) + ' â funds ' + fmt(mi) + '/month for ' + (ls - ra) + ' years.';
     document.getElementById('r-dd-save').textContent = fmt(ddSave) + ' / mo';
     document.getElementById('r-dd-years').textContent = ytr + ' years';
     document.getElementById('r-dd-total').textContent = fmt(ddSave * mtr);
     document.getElementById('r-dd-invest').textContent = fmt(ddInvest) + ' / mo';
     document.getElementById('r-dd-invest-total').textContent = fmt(ddInvest * mtr);
     document.getElementById('r-dd-invest-fv').textContent = fmt(ds);
-    document.getElementById('r-dividend-target-label').textContent = 'Target: ' + fmt(dvs) + ' — generates ' + fmt(mi) + '/month indefinitely via 6% yield.';
+
+    document.getElementById('r-dividend-target-label').textContent = 'Target: ' + fmt(dvs) + ' â generates ' + fmt(mi) + '/month indefinitely via 6% yield.';
     document.getElementById('r-dv-save').textContent = fmt(dvSave) + ' / mo';
     document.getElementById('r-dv-years').textContent = ytr + ' years';
     document.getElementById('r-dv-total').textContent = fmt(dvSave * mtr);
     document.getElementById('r-dv-invest').textContent = fmt(dvInvest) + ' / mo';
     document.getElementById('r-dv-invest-total').textContent = fmt(dvInvest * mtr);
     document.getElementById('r-dv-invest-fv').textContent = fmt(dvs);
+
     document.getElementById('a-lifespan').textContent = ls;
     document.getElementById('results').style.display = 'block';
     document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+
+    // ââ Charts ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+    renderMonthlyChart(ddSave, ddInvest, dvSave, dvInvest);
+    renderRetirementChart(ds, dvs, mi, ra, ls);
+    renderAccumulationChart(ds, dvs, ddSave, ddInvest, dvSave, dvInvest, ca, ra, ir, mtr);
+  }
+
+  // Chart 1: Monthly amounts bar chart
+  function renderMonthlyChart(ddSave, ddInvest, dvSave, dvInvest) {
+    if (chartMonthly) chartMonthly.destroy();
+    chartMonthly = new Chart(document.getElementById('chartMonthly'), {
+      type: 'bar',
+      data: {
+        labels: ['Drawdown: Save Only', 'Drawdown: Invest (8%)', 'Dividend: Save Only', 'Dividend: Invest (8%)'],
+        datasets: [{
+          label: 'Monthly Amount Needed',
+          data: [Math.round(ddSave), Math.round(ddInvest), Math.round(dvSave), Math.round(dvInvest)],
+          backgroundColor: ['#90cdf4', '#3182ce', '#9ae6b4', '#276749'],
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) { return ' $' + ctx.raw.toLocaleString('en-US') + ' / month'; }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(v) { return fmtK(v); }
+            },
+            grid: { color: '#f0f0f0' }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 11 } }
+          }
+        }
+      }
+    });
+  }
+
+  // Chart 2: Retirement fund over time
+  function renderRetirementChart(ds, dvs, mi, ra, ls) {
+    if (chartRetirement) chartRetirement.destroy();
+    var years = [], ddData = [], dvData = [];
+    var monthlyDrawdown = mi;
+    var ddBalance = ds;
+    for (var age = ra; age <= ls; age++) {
+      years.push('Age ' + age);
+      ddData.push(Math.max(0, Math.round(ddBalance)));
+      dvData.push(Math.round(dvs));
+      ddBalance -= monthlyDrawdown * 12;
+    }
+    chartRetirement = new Chart(document.getElementById('chartRetirement'), {
+      type: 'line',
+      data: {
+        labels: years,
+        datasets: [
+          {
+            label: 'Drawdown (spent down)',
+            data: ddData,
+            borderColor: '#3182ce',
+            backgroundColor: 'rgba(49,130,206,0.08)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0,
+            borderWidth: 2.5
+          },
+          {
+            label: 'Dividend (capital preserved)',
+            data: dvData,
+            borderColor: '#276749',
+            backgroundColor: 'rgba(39,103,73,0.06)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0,
+            borderWidth: 2.5,
+            borderDash: [6, 3]
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 12 } } },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) { return ' ' + ctx.dataset.label + ': ' + fmtK(ctx.raw); }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { callback: function(v) { return fmtK(v); } },
+            grid: { color: '#f0f0f0' }
+          },
+          x: {
+            grid: { display: false },
+            ticks: {
+              maxTicksLimit: 8,
+              font: { size: 11 }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Chart 3: Accumulation phase
+  function renderAccumulationChart(ds, dvs, ddSave, ddInvest, dvSave, dvInvest, ca, ra, ir, mtr) {
+    if (chartAccumulation) chartAccumulation.destroy();
+    var labels = [], ddSaveData = [], ddInvestData = [], dvSaveData = [], dvInvestData = [];
+    for (var m = 0; m <= mtr; m += Math.max(1, Math.floor(mtr / 60))) {
+      var age = ca + m / 12;
+      labels.push('Age ' + Math.round(age));
+      ddSaveData.push(Math.round(ddSave * m));
+      dvSaveData.push(Math.round(dvSave * m));
+      // FV of annuity: PMT * ((1+r)^n - 1) / r
+      var fvDD = ir > 0 ? ddInvest * (Math.pow(1 + ir, m) - 1) / ir : ddInvest * m;
+      var fvDV = ir > 0 ? dvInvest * (Math.pow(1 + ir, m) - 1) / ir : dvInvest * m;
+      ddInvestData.push(Math.round(fvDD));
+      dvInvestData.push(Math.round(fvDV));
+    }
+    // Ensure final point hits target
+    labels.push('Age ' + ra + ' (retire)');
+    ddSaveData.push(Math.round(ds)); ddInvestData.push(Math.round(ds));
+    dvSaveData.push(Math.round(dvs)); dvInvestData.push(Math.round(dvs));
+
+    chartAccumulation = new Chart(document.getElementById('chartAccumulation'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: 'Drawdown: Save Only', data: ddSaveData, borderColor: '#90cdf4', backgroundColor: 'transparent', tension: 0, pointRadius: 0, borderWidth: 2 },
+          { label: 'Drawdown: Invest (8%)', data: ddInvestData, borderColor: '#3182ce', backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 2.5 },
+          { label: 'Dividend: Save Only', data: dvSaveData, borderColor: '#9ae6b4', backgroundColor: 'transparent', tension: 0, pointRadius: 0, borderWidth: 2 },
+          { label: 'Dividend: Invest (8%)', data: dvInvestData, borderColor: '#276749', backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 2.5 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 12 } } },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) { return ' ' + ctx.dataset.label + ': ' + fmtK(ctx.raw); }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { callback: function(v) { return fmtK(v); } },
+            grid: { color: '#f0f0f0' }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { maxTicksLimit: 8, font: { size: 11 } }
+          }
+        }
+      }
+    });
   }
 </script>
+
 </body>
 </html>
