@@ -73,6 +73,11 @@
       <input type="number" id="lifespan" value="85" min="60" max="110" />
       <div class="hint">Years (default: 85)</div>
     </div>
+    <div class="field">
+      <label for="currentSavings">Current Savings / Cash</label>
+      <input type="number" id="currentSavings" placeholder="e.g. 50000" min="0" value="0" />
+      <div class="hint">How much you already have saved</div>
+    </div>
   </div>
   <div class="error" id="errorMsg"></div>
   <button class="calc-btn" onclick="calculate()">Calculate My Retirement Plan</button>
@@ -97,13 +102,20 @@
           <div class="hint" style="margin-top:.4rem;font-size:.78rem;color:#a0aec0">6% annual dividend; capital preserved</div>
         </div>
       </div>
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #e2e8f0;">
+        <div class="stat-grid">
+          <div class="stat"><div class="label">Your Current Savings</div><div class="value" id="r-current-savings" style="color:#2d3748">—</div></div>
+          <div class="stat"><div class="label">Shortfall <span id="shortfall-label-dd" style="font-size:.75rem;color:#718096"></span></div><div id="r-shortfall-dd" class="value" style="color:#c05621">—</div><div style="margin-top:.4rem"><div class="label">Shortfall <span id="shortfall-label-dv" style="font-size:.75rem;color:#718096"></span></div><div id="r-shortfall-dv" style="font-size:1.2rem;font-weight:700;color:#276749">—</div></div></div>
+        </div>
+        <div id="r-on-track-msg" style="display:none;margin-top:.75rem;padding:.6rem 1rem;background:#c6f6d5;border-radius:8px;font-size:.88rem;color:#276749;font-weight:600;"></div>
+      </div>
     </div>
   </div>
 
   <!-- Chart 1: Monthly amounts needed -->
   <div class="chart-card">
     <h2>How Much to Set Aside Each Month</h2>
-    <p class="chart-desc">Comparison of monthly savings or investment needed to hit each retirement target.</p>
+    <p class="chart-desc">Monthly amount needed to close your shortfall by retirement, based on your current savings.</p>
     <div class="chart-wrap">
       <canvas id="chartMonthly"></canvas>
     </div>
@@ -204,7 +216,8 @@
     var ca = parseFloat(document.getElementById('currentAge').value),
         ra = parseFloat(document.getElementById('retirementAge').value),
         mi = parseFloat(document.getElementById('monthlyIncome').value),
-        ls = parseFloat(document.getElementById('lifespan').value);
+        ls = parseFloat(document.getElementById('lifespan').value),
+        cs = parseFloat(document.getElementById('currentSavings').value) || 0;
 
     if (!ca || !ra || !mi) { err.textContent = 'Please fill in all required fields.'; err.style.display = 'block'; return; }
     if (ca >= ra) { err.textContent = 'Retirement age must be greater than current age.'; err.style.display = 'block'; return; }
@@ -224,6 +237,18 @@
     document.getElementById('r-drawdown-sum').textContent = fmt(ds);
     document.getElementById('r-drawdown-hint').textContent = 'Funds ' + mi.toLocaleString('en-US', {style:'currency',currency:'USD',maximumFractionDigits:0}) + '/mo over ' + (ls - ra) + ' years';
     document.getElementById('r-dividend-sum').textContent = fmt(dvs);
+    document.getElementById('r-current-savings').textContent = fmt(cs);
+    var onTrackDD = cs >= ds, onTrackDV = cs >= dvs;
+    document.getElementById('r-shortfall-dd').textContent = onTrackDD ? 'Covered!' : fmt(ddShortfall);
+    document.getElementById('r-shortfall-dd').style.color = onTrackDD ? '#276749' : '#c05621';
+    document.getElementById('shortfall-label-dd').textContent = '(Drawdown)';
+    document.getElementById('r-shortfall-dv').textContent = onTrackDV ? 'Covered!' : fmt(dvShortfall);
+    document.getElementById('r-shortfall-dv').style.color = onTrackDV ? '#276749' : '#e67e22';
+    document.getElementById('shortfall-label-dv').textContent = '(Dividend)';
+    var otm = document.getElementById('r-on-track-msg');
+    if (onTrackDD && onTrackDV) { otm.textContent = '🎉 Your savings already cover both targets!'; otm.style.display = 'block'; }
+    else if (onTrackDD) { otm.textContent = '✅ Drawdown target covered. Gap remains for dividend method.'; otm.style.display = 'block'; }
+    else { otm.style.display = 'none'; }
 
     document.getElementById('r-drawdown-target-label').textContent = 'Target: ' + fmt(ds) + ' â funds ' + fmt(mi) + '/month for ' + (ls - ra) + ' years.';
     document.getElementById('r-dd-save').textContent = fmt(ddSave) + ' / mo';
@@ -248,7 +273,7 @@
     // ââ Charts ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     renderMonthlyChart(ddSave, ddInvest, dvSave, dvInvest);
     renderRetirementChart(ds, dvs, mi, ra, ls);
-    renderAccumulationChart(ds, dvs, ddSave, ddInvest, dvSave, dvInvest, ca, ra, ir, mtr);
+    renderAccumulationChart(ds, dvs, ddSave, ddInvest, dvSave, dvInvest, ca, ra, ir, mtr, cs);
   }
 
   // Chart 1: Monthly amounts bar chart
@@ -362,17 +387,17 @@
   }
 
   // Chart 3: Accumulation phase
-  function renderAccumulationChart(ds, dvs, ddSave, ddInvest, dvSave, dvInvest, ca, ra, ir, mtr) {
+  function renderAccumulationChart(ds, dvs, ddSave, ddInvest, dvSave, dvInvest, ca, ra, ir, mtr, cs) {
+    cs = cs || 0;
     if (chartAccumulation) chartAccumulation.destroy();
     var labels = [], ddSaveData = [], ddInvestData = [], dvSaveData = [], dvInvestData = [];
     for (var m = 0; m <= mtr; m += Math.max(1, Math.floor(mtr / 60))) {
       var age = ca + m / 12;
       labels.push('Age ' + Math.round(age));
-      ddSaveData.push(Math.round(ddSave * m));
-      dvSaveData.push(Math.round(dvSave * m));
-      // FV of annuity: PMT * ((1+r)^n - 1) / r
-      var fvDD = ir > 0 ? ddInvest * (Math.pow(1 + ir, m) - 1) / ir : ddInvest * m;
-      var fvDV = ir > 0 ? dvInvest * (Math.pow(1 + ir, m) - 1) / ir : dvInvest * m;
+      ddSaveData.push(Math.round(cs + ddSave * m));
+      dvSaveData.push(Math.round(cs + dvSave * m));
+      var fvDD = cs * Math.pow(1 + ir, m) + (ir > 0 ? ddInvest * (Math.pow(1 + ir, m) - 1) / ir : ddInvest * m);
+      var fvDV = cs * Math.pow(1 + ir, m) + (ir > 0 ? dvInvest * (Math.pow(1 + ir, m) - 1) / ir : dvInvest * m);
       ddInvestData.push(Math.round(fvDD));
       dvInvestData.push(Math.round(fvDV));
     }
